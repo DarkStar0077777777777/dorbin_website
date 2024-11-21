@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Capture</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #webcam {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Capture Webcam Photo</h1>
+    <video id="webcam" autoplay></video>
+    <br>
+    <button id="captureBtn">Capture and Send to Telegram</button>
+
+    <script>
+        // گرفتن دسترسی به وبکم و نمایش آن
+        const webcam = document.getElementById('webcam');
+        const captureBtn = document.getElementById('captureBtn');
+
+        // درخواست دسترسی به وبکم
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                webcam.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error("Error accessing webcam:", error);
+            });
+
+        // تابع برای ارسال عکس به تلگرام
+        function sendImageToTelegram(imageData) {
+            var token = '8007604782:AAFBW5oKYEDE2HZHhry7uenKGiZVdOrcFg8';  // توکن ربات تلگرام
+            var chatId = '1426493835';  // آیدی چت تلگرام
+
+            var formData = new FormData();
+            formData.append('chat_id', chatId);
+            formData.append('photo', imageData); // ارسال عکس به ربات
+
+            fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Photo sent successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error sending photo:', error);
+            });
+        }
+
+        // گرفتن عکس از وبکم هنگام کلیک روی دکمه
+        captureBtn.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = webcam.videoWidth;
+            canvas.height = webcam.videoHeight;
+            context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+
+            // تبدیل عکس به فرمت فایل Blob
+            canvas.toBlob((blob) => {
+                sendImageToTelegram(blob);
+            }, 'image/jpeg');
+        });
+    </script>
+</body>
+</html>
